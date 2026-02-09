@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>NutriScale | AI Nutrition Intelligent</title>
+
+    <!-- PWA Manifest -->
+    <link rel="icon" type="image/png" href="/static/images/logo.png">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#00C853">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/css/style.css?v=2.1">
+    <!-- Icons (Material Symbols) -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+    <!-- Graphing Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- LOADING OVERLAY -->
+        <div id="loader" class="hidden">
+            <div class="spinner"></div>
+            <p id="loader-text">Analyzing...</p>
+        </div>
+
+        <!-- ONBOARDING VIEW -->
+        <section id="view-onboarding" class="screen fade-in">
+            <div class="brand-logo" style="margin-bottom: 2rem; justify-content: center;">
+                <img src="/static/images/logo.png" alt="NutriScale">
+                <h1>NutriScale</h1>
+            </div>
+
+            <div class="glass-panel">
+                <h3>Welcome to NutriScale</h3>
+                <p style="margin-bottom: 20px; font-size: 0.9rem; opacity: 0.7;">Tell us about yourself to personalize
+                    your nutrition plan.</p>
+
+                <form id="setup-form">
+                    <div class="form-group">
+                        <label>Your Name</label>
+                        <input type="text" name="name" placeholder="Name" required>
+                    </div>
+                    <div class="stats-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Age</label>
+                            <input type="number" name="age" placeholder="25" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Height (cm)</label>
+                            <input type="number" name="height" placeholder="175" required>
+                        </div>
+                    </div>
+                    <div class="stats-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Weight (kg)</label>
+                            <input type="number" name="weight" placeholder="70" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <div class="select-wrapper">
+                                <select name="gender" required>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Activity Level</label>
+                        <div class="select-wrapper">
+                            <select name="activity_level" required>
+                                <option value="low">Sedentary (Low)</option>
+                                <option value="moderate" selected>Active (Moderate)</option>
+                                <option value="high">Athlete (High)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nutrition Goal</label>
+                        <div class="select-wrapper">
+                            <select name="goal" required>
+                                <option value="lose">Weight Loss</option>
+                                <option value="maintain" selected>Maintenance</option>
+                                <option value="gain">Weight Gain</option>
+                                <option value="muscle">Muscle Build</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary ripple">Begin Intelligence</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- DASHBOARD VIEW -->
+        <section id="view-dashboard" class="screen hidden fade-in">
+            <header class="top-bar">
+                <div class="brand-logo" style="justify-content: flex-start;">
+                    <img src="/static/images/logo.png" alt="NutriScale" style="height: 38px; border-radius: 10px;">
+                    <div style="display: flex; flex-direction: column; justify-content: center;">
+                        <h1 style="line-height: 1;">NutriScale</h1>
+                        <small id="current-date" style="opacity: 0.6; font-size: 0.7rem; margin-top: 2px;"></small>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button id="btn-show-users" class="btn-icon ripple" title="Profiles">
+                        <span class="material-symbols-rounded">group</span>
+                    </button>
+                    <button id="btn-show-settings" class="btn-icon ripple" title="Settings">
+                        <span class="material-symbols-rounded">settings</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="card summary-card glass-panel">
+                <div class="ring-container">
+                    <svg class="progress-ring" width="140" height="140">
+                        <circle class="progress-ring__circle-bg" stroke="#ffffff10" stroke-width="10" fill="transparent"
+                            r="60" cx="70" cy="70" />
+                        <circle id="ring-progress" class="progress-ring__circle" stroke="var(--primary)"
+                            stroke-width="10" fill="transparent" r="60" cx="70" cy="70" />
+                    </svg>
+                    <div class="ring-text">
+                        <span id="cal-remaining" class="big-num">--</span>
+                        <small>Left</small>
+                    </div>
+                </div>
+                <div class="stats-row" style="margin-top: 24px;">
+                    <div class="stat-item">
+                        <span id="cal-eaten" class="med-num">0</span>
+                        <small>Eaten</small>
+                    </div>
+                    <div class="stat-item" style="justify-self: center;">
+                        <button id="btn-micro-toggle" class="btn-icon-small ripple"
+                            style="background: var(--primary-glow); color: var(--primary); margin-bottom: 4px;">
+                            <span class="material-symbols-rounded" style="font-size: 20px;">expand_more</span>
+                        </button>
+                        <small>Micros</small>
+                    </div>
+                    <div class="stat-item">
+                        <span id="cal-target" class="med-num">0</span>
+                        <small>Target</small>
+                    </div>
+                </div>
+
+                <!-- Always Visible Macros -->
+                <div class="macro-tracking" style="margin-top: 20px;">
+                    <div class="macro-item">
+                        <div class="macro-header">
+                            <span class="macro-label">💪 Protein</span>
+                            <span class="macro-values"><span id="protein-consumed">0</span>/<span
+                                    id="protein-target">0</span>g</span>
+                        </div>
+                        <div class="macro-bar-bg">
+                            <div id="protein-bar" class="macro-bar macro-bar-protein" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="macro-item">
+                        <div class="macro-header">
+                            <span class="macro-label">🍞 Carbs</span>
+                            <span class="macro-values"><span id="carbs-consumed">0</span>/<span
+                                    id="carbs-target">0</span>g</span>
+                        </div>
+                        <div class="macro-bar-bg">
+                            <div id="carbs-bar" class="macro-bar macro-bar-carbs" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="macro-item">
+                        <div class="macro-header">
+                            <span class="macro-label">🥑 Fat</span>
+                            <span class="macro-values"><span id="fat-consumed">0</span>/<span
+                                    id="fat-target">0</span>g</span>
+                        </div>
+                        <div class="macro-bar-bg">
+                            <div id="fat-bar" class="macro-bar macro-bar-fat" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Micronutrients -->
+                <div id="micro-container" class="macro-tracking collapsed"
+                    style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px;">
+                    <div class="nutrition-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                        <div class="nutri-item glass-panel"
+                            style="padding: 12px 8px; display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.05); border-radius: 16px;">
+                            <span style="font-size: 1.4rem; margin-bottom: 6px;">🍬</span>
+                            <small
+                                style="opacity: 0.7; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Sugar</small>
+                            <div style="font-weight: 700; font-size: 1.1rem;"><span id="dash-sugar">0</span><small
+                                    style="font-size: 0.7rem; margin-left:1px;">g</small></div>
+                        </div>
+                        <div class="nutri-item glass-panel"
+                            style="padding: 12px 8px; display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.05); border-radius: 16px;">
+                            <span style="font-size: 1.4rem; margin-bottom: 6px;">🥦</span>
+                            <small
+                                style="opacity: 0.7; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Fiber</small>
+                            <div style="font-weight: 700; font-size: 1.1rem;"><span id="dash-fiber">0</span><small
+                                    style="font-size: 0.7rem; margin-left:1px;">g</small></div>
+                        </div>
+                        <div class="nutri-item glass-panel"
+                            style="padding: 12px 8px; display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.05); border-radius: 16px;">
+                            <span style="font-size: 1.4rem; margin-bottom: 6px;">🧂</span>
+                            <small
+                                style="opacity: 0.7; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Sodium</small>
+                            <div style="font-weight: 700; font-size: 1.1rem;"><span id="dash-sodium">0</span><small
+                                    style="font-size: 0.7rem; margin-left:1px;">mg</small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-weekly" class="hidden">
+                <h3 class="section-title">Weekly Calories</h3>
+                <div class="glass-panel" style="padding: 15px; margin-bottom: 20px;">
+                    <canvas id="calorie-chart" style="width: 100%; height: 180px;"></canvas>
+                </div>
+            </div>
+
+            <h3 class="section-title">Meal History</h3>
+            <div id="meal-list" class="meal-list">
+                <!-- Meal items injected here -->
+                <p class="empty-state">No meals logged today.</p>
+            </div>
+
+            <button id="btn-add-meal" class="fab ripple">
+                <span class="material-symbols-rounded">add</span>
+            </button>
+        </section>
+
+        <!-- CAPTURE VIEW -->
+        <section id="view-capture" class="screen hidden slide-up">
+            <header class="top-bar">
+                <button id="btn-back" class="btn-icon ripple">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <h2>New Meal</h2>
+                <div style="width: 24px;"></div> <!-- Spacer -->
+            </header>
+
+            <div class="glass-panel" style="padding: 15px; margin-bottom: 15px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 14px;">Input Source</h4>
+                <div style="display: flex; gap: 10px;">
+                    <button id="toggle-camera-pi" class="toggle-btn active" data-source="pi">
+                        <span class="material-symbols-rounded">photo_camera</span> Pi Camera
+                    </button>
+                    <button id="toggle-camera-client" class="toggle-btn" data-source="client">
+                        <span class="material-symbols-rounded">smartphone</span> Phone
+                    </button>
+                </div>
+                <input type="file" id="client-image-input" accept="image/*" capture="environment"
+                    style="display: none;">
+            </div>
+
+            <div class="camera-preview glass-panel">
+                <img id="pi-camera-feed" src="/api/video_feed"
+                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;"
+                    onerror="this.style.display='none'; document.getElementById('cam-placeholder').style.display='flex';">
+                <div id="cam-placeholder" class="placeholder-cam"
+                    style="display: none; height: 100%; width: 100%; flex-direction: column; justify-content: center; align-items: center;">
+                    <span class="material-symbols-rounded" style="font-size: 48px; opacity: 0.5;">photo_camera</span>
+                    <p>Camera Live (Off)</p>
+                </div>
+            </div>
+
+            <div class="sensor-readout glass-panel">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button id="toggle-weight-scale" class="toggle-btn active" data-source="scale" style="flex: 1;">
+                        <span class="material-symbols-rounded">scale</span> Scale
+                    </button>
+                    <button id="toggle-weight-manual" class="toggle-btn" data-source="manual" style="flex: 1;">
+                        <span class="material-symbols-rounded">edit</span> Manual
+                    </button>
+                </div>
+                <div class="weight-display">
+                    <span class="material-symbols-rounded">scale</span>
+                    <input type="number" id="readout-weight" class="weight-val" value="0.0" step="0.1"
+                        style="border: none; background: transparent; text-align: center; font-size: inherit; font-weight: inherit; color: inherit; width: 100px;">
+                    <span class="unit">g</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; justify-content: center;">
+                    <button id="btn-refresh-weight" class="btn-icon-small ripple" title="Refresh Weight">
+                        <span class="material-symbols-rounded">refresh</span>
+                    </button>
+                    <button id="btn-tare-scale" class="btn-icon-small ripple" title="Zero Scale"
+                        style="background: rgba(255,255,255,0.05);">
+                        <span class="material-symbols-rounded">exposure_zero</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="analysis-result" class="hidden">
+                <div class="analysis-card glass-panel">
+                    <h3 id="res-food-name">Detected Food</h3>
+                    <div class="nutrition-grid">
+                        <div class="nutri-item">
+                            <strong>Cal</strong>
+                            <span id="res-cal">0</span>
+                        </div>
+                        <div class="nutri-item">
+                            <strong>Prot</strong>
+                            <span id="res-p">0</span>
+                        </div>
+                        <div class="nutri-item">
+                            <strong>Carb</strong>
+                            <span id="res-c">0</span>
+                        </div>
+                        <div class="nutri-item">
+                            <strong>Fat</strong>
+                            <span id="res-f">0</span>
+                        </div>
+                    </div>
+
+                    <div class="micro-nutrition nutrition-grid"
+                        style="grid-template-columns: repeat(3, 1fr); border-top: 1px solid #ffffff10; padding-top: 10px; margin-top: 10px;">
+                        <div class="nutri-item">
+                            <small>Sugar</small>
+                            <span id="res-sugar">0g</span>
+                        </div>
+                        <div class="nutri-item">
+                            <small>Fiber</small>
+                            <span id="res-fiber">0g</span>
+                        </div>
+                        <div class="nutri-item">
+                            <small>Sodium</small>
+                            <span id="res-sodium">0mg</span>
+                        </div>
+                    </div>
+                    <div class="health-score-box">
+                        <span id="res-emoji" style="font-size: 2rem;">⚪</span>
+                        <div class="score-text">
+                            <span class="label">Health Score</span>
+                            <span id="res-score" class="score-val">0</span>
+                        </div>
+                    </div>
+                    <button id="btn-save-meal" class="btn-primary ripple">Log Meal</button>
+                </div>
+            </div>
+
+            <button id="btn-analyze" class="btn-primary ripple">
+                <span class="material-symbols-rounded">shutter_speed</span>
+                Analyze & Weigh
+            </button>
+        </section>
+
+        <!-- USER MANAGEMENT VIEW -->
+        <section id="view-users" class="screen hidden slide-up">
+            <header class="top-bar">
+                <button id="btn-back-users" class="btn-icon ripple">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <h2>Profiles</h2>
+                <div style="width: 24px;"></div>
+            </header>
+            <div class="glass-panel" style="margin-bottom: 20px;">
+                <div id="user-profile-details" class="hidden">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <div
+                            style="width: 60px; height: 60px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; font-weight: 700;">
+                            <span id="profile-initials">JS</span>
+                        </div>
+                        <div>
+                            <h3 id="profile-name">User Name</h3>
+                            <p id="profile-goal" style="font-size: 0.8rem; opacity: 0.7;">Goal: Maintain</p>
+                        </div>
+                    </div>
+
+                    <div class="stats-row"
+                        style="margin-bottom: 24px; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 20px;">
+                        <div class="stat-item">
+                            <small>Health</small>
+                            <span id="profile-avg-score" class="med-num">--</span>
+                        </div>
+                        <div class="stat-item"
+                            style="border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
+                            <small>Weight</small>
+                            <div><span id="profile-current-weight" class="med-num">--</span><small
+                                    style="text-transform: lowercase; opacity: 0.5;">kg</small></div>
+                        </div>
+                        <div class="stat-item">
+                            <small>Streak</small>
+                            <span class="med-num">7</span>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-bottom: 10px; font-size: 0.9rem;">Weight History</h4>
+                    <canvas id="weight-chart" style="width: 100%; height: 150px;"></canvas>
+                </div>
+
+                <h3 id="manage-accounts-title">Manage Accounts</h3>
+                <div id="user-management-inner" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Users injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SETTINGS VIEW -->
+        <section id="view-settings" class="screen hidden slide-up">
+            <header class="top-bar">
+                <button id="btn-back-settings" class="btn-icon ripple">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <h2>Settings</h2>
+                <div style="width: 24px;"></div>
+            </header>
+
+            <div class="glass-panel" style="margin-bottom: 20px;">
+                <h3>Current Profile</h3>
+                <form id="update-profile-form" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div class="form-group">
+                        <label>Current Weight (kg)</label>
+                        <input type="number" name="weight" step="0.1" id="set-weight" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Height (cm)</label>
+                        <input type="number" name="height" id="set-height" required>
+                    </div>
+                    <button type="submit" class="btn-primary ripple" style="padding: 8px;">Update Stats</button>
+                </form>
+            </div>
+
+            <div class="glass-panel" style="margin-bottom: 20px;">
+                <h3>System Preferences</h3>
+                <p style="font-size: 0.8rem; margin-bottom: 15px;">Hardware and data management.</p>
+                <div class="form-group">
+                    <button id="btn-reset-data" class="btn-primary ripple"
+                        style="background: var(--danger); box-shadow: 0 4px 15px rgba(255, 82, 82, 0.4); margin-top: 10px;">
+                        Clear All Data
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center; opacity: 0.5;">
+                <p>NutriScale v2.0</p>
+                <p>Intelligence Powered by AI</p>
+            </div>
+        </section>
+
+        <!-- MEAL DETAILS VIEW -->
+        <section id="view-meal-details" class="screen hidden fade-in">
+            <header class="top-bar">
+                <button id="btn-details-back" class="btn-icon ripple">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <h2 id="details-food-name">Meal Details</h2>
+                <div style="width: 44px;"></div>
+            </header>
+
+            <div class="glass-panel" style="padding: 0; overflow: hidden; margin-bottom: 20px;">
+                <img id="details-image" src="" alt="Meal" style="width: 100%; height: 200px; object-fit: cover;">
+                <div style="padding: 20px;">
+                    <div class="stats-row" style="margin-bottom: 0;">
+                        <div class="stat-item">
+                            <span id="details-calories" class="med-num">0</span>
+                            <small>Calories</small>
+                        </div>
+                        <div class="stat-item">
+                            <span id="details-weight" class="med-num">0</span>
+                            <small>Weight (g)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel">
+                <h3 class="section-title">Macro Breakdown</h3>
+                <div class="nutrition-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="nutri-item">
+                        <strong>Prot</strong>
+                        <span id="details-protein">0</span>g
+                    </div>
+                    <div class="nutri-item">
+                        <strong>Carb</strong>
+                        <span id="details-carbs">0</span>g
+                    </div>
+                    <div class="nutri-item">
+                        <strong>Fat</strong>
+                        <span id="details-fat">0</span>g
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MEAL REVIEW MODAL -->
+        <div id="modal-review" class="hidden"
+            style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+            <div class="glass-panel fade-in" style="width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto;">
+                <h2 style="color: var(--primary); margin-bottom: 15px;">Meal Logged! 🎉</h2>
+                <div id="review-content">
+                    <!-- Review data injected here -->
+                </div>
+                <button id="btn-close-review" class="btn-primary" style="margin-top: 20px;">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js?v=2.1"></script>
+</body>
+
+</html>
