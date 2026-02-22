@@ -49,10 +49,9 @@ The project includes a comprehensive **Academic Research Suite** ([ml/nutriscale
    git clone [https://github.com/nabeelsyed14/nutriscale.git](https://github.com/nabeelsyed14/nutriscale.git)
    cd nutriscale
 2. **Run Environment Setup:**
- ```bash
+   ```bash
    chmod +x setup_pi.sh run_pi.sh
    ./setup_pi.sh
- ```
 3. **Launch:**
- ```bash
-./run_pi.sh
+   ```bash
+   ./run_pi.sh
