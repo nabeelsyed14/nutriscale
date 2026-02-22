@@ -62,8 +62,10 @@ The project includes a comprehensive **Academic Research Suite** ([ml/nutriscale
 ### 3. Clone the Repo:
       git clone [https://github.com/nabeelsyed14/nutriscale.git](https://github.com/nabeelsyed14/nutriscale.git)
       cd nutriscale
-### 4. Run Environment Setup:
+### 4. Run Environment Setup: (Raspberry Pi Only)
       chmod +x setup_pi.sh run_pi.sh
       ./setup_pi.sh
 ### 5. Launch:
-      ./run_pi.sh
+      ./run_pi.sh (PI)
+      **or**
+      ./run_pc.bat (PC)
