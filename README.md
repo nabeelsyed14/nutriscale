@@ -13,7 +13,7 @@ Most calorie-tracking apps are tedious and inaccurate. **NutriScale** solves thi
 
 ### 1. Precision Vision-Grounding
 *   **Grounded ID:** AI identifies the food, but the **local authority database (8,900+ items)** dictates the nutritional density (Protein/Carbs/Fat/Fiber per 100g).
-*   **Precision Math:** Calculates calories and macros using [(Trusted Density) × (Measured Load Cell Weight)](cci:1://file:///c:/Users/nabee/.gemini/antigravity/scratch/smart-meal-tracker/ml/data_generator.py:6:0-118:29).
+*   **Precision Math:** Calculates calories and macros using [(Trusted Density) × (Measured Load Cell Weight)]
 
 ### 2. Proactive AI Intelligence
 *   **Predictive ML:** Built-in Random Forest Regressor that predicts your daily health score trend based on historical intake.
@@ -27,7 +27,7 @@ Most calorie-tracking apps are tedious and inaccurate. **NutriScale** solves thi
 
 ## 🛠️ Technical Stack
 *   **Core:** Python 3.11 / Flask / SocketIO
-*   **Hardware:** Raspberry Pi 5 + HX711 Load Cell + Pi Camera Module 3
+*   **Hardware:** Raspberry Pi 5 + HX711 Load Cell + Pi Camera Module v2
 *   **ML Engine:** Scikit-Learn / Joblib (Serialized Random Forest)
 *   **Frontend:** "Emerald Glass" Design System (Vanilla CSS/JS, Premium Glassmorphism)
 *   **Database:** SQLite (History) + JSON (Nutritional Grounding)
@@ -35,7 +35,7 @@ Most calorie-tracking apps are tedious and inaccurate. **NutriScale** solves thi
 ---
 
 ## 🔬 Research Suite
-The project includes a comprehensive **Academic Research Suite** ([ml/nutriscale_ml_suite.ipynb](cci:7://file:///c:/Users/nabee/.gemini/antigravity/scratch/smart-meal-tracker/ml/nutriscale_ml_suite.ipynb:0:0-0:0)) documenting:
+The project includes a comprehensive **Academic Research Suite** ([ml/nutriscale_ml_suite.ipynb] documenting:
 *   Feature Importance & Metabolic Narratives.
 *   Residual & Error Distribution Analysis.
 *   Counterfactual "What-If" Simulations for dietary interventions.
