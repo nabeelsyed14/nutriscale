@@ -1,0 +1,29 @@
+# Secrets
+.env
+
+# Python junk
+__pycache__/
+*.py[cod]
+*$py.class
+.venv
+venv/
+ENV/
+
+# Large ML data/models (Better to keep local or use LFS)
+ml/health_model.joblib
+ml/user_logs.csv
+
+# Local meal images (Keep logo)
+frontend/static/images/*.jpg
+!frontend/static/images/logo.png
+
+# IDEs
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Database
+backend/data/*.db
