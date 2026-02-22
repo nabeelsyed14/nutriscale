@@ -280,8 +280,41 @@ async function loadDashboard() {
 
         // Weekly Stats & Graph
         loadWeeklyStats();
+
+        // AI ML Insights
+        loadMLInsights();
     } catch (e) {
         console.error("Dashboard failed", e);
+    }
+}
+
+async function loadMLInsights() {
+    const card = document.getElementById('ai-insight-card');
+    const textEl = document.getElementById('ml-prediction-text');
+    const listEl = document.getElementById('ml-suggestions-list');
+
+    if (!card || !textEl || !listEl) return;
+
+    try {
+        const res = await fetch(`${API_URL}/ml/insight`);
+        if (res.status === 202) {
+            card.classList.add('hidden');
+            return;
+        }
+
+        const data = await res.json();
+
+        if (data.predicted_score) {
+            card.classList.remove('hidden');
+            textEl.innerHTML = `Predicted Daily Health Score: <span style="font-size: 1.2rem; color: var(--primary);">${data.predicted_score}</span> / 10`;
+
+            listEl.innerHTML = (data.suggestions || []).map(s => `<li>${s}</li>`).join('');
+        } else {
+            card.classList.add('hidden');
+        }
+    } catch (e) {
+        console.error("ML Insight load failed", e);
+        card.classList.add('hidden');
     }
 }
 

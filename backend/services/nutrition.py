@@ -185,46 +185,65 @@ def _identify_and_estimate_density(image_path):
 
 def calculate_smart_health_score(data, user_goal, weight_g):
     """
-    Advanced adaptive scoring logic.
+    Advanced adaptive scoring logic based on AMDR (Acceptable Macronutrient Distribution Ranges).
     Returns {health_score, health_emoji}
     """
-    score = 80  # Base score
+    score = 85  # Slightly higher base because penalties are more surgical
     
     # Extract values with defaults
-    calories = data.get('calories', 0)
-    protein = data.get('protein_g', 0)
-    sugar = data.get('sugar_g', 0)
-    fiber = data.get('fiber_g', 0)
-    sodium = data.get('sodium_mg', 0)
-    sat_fat = data.get('saturated_fat_g', 0)
-    is_processed = data.get('is_ultra_processed', False)
+    calories = float(data.get('calories', 0))
+    protein = float(data.get('protein_g', 0))
+    carbs = float(data.get('carbs_g', 0))
+    fat = float(data.get('fat_g', 0))
+    sugar = float(data.get('sugar_g', 0))
+    fiber = float(data.get('fiber_g', 0))
+    sodium = float(data.get('sodium_mg', 0))
+    sat_fat = float(data.get('saturated_fat_g', 0))
+    is_processed = bool(data.get('is_ultra_processed', False))
     
-    # 1. Processing Penalty (Heavy)
-    if is_processed:
-        score -= 25
+    # Calculate Macro Percentages (Atwater Factors)
+    # Using a 2.0 buffer to avoid division by zero or tiny items
+    total_ener = (protein * 4.0) + (carbs * 4.0) + (fat * 9.0)
+    
+    if total_ener > 10:
+        p_pct = (protein * 4.0) / total_ener
+        f_pct = (fat * 9.0) / total_ener
+        c_pct = (carbs * 4.0) / total_ener
         
-    # 2. Nutrient Density Bonus
-    if fiber > 3: score += 5
-    if protein > 15: score += 5
+        # 1. Macronutrient Balance (AMDR Alignment)
+        if f_pct > 0.40: score -= 15    # Penalty for excessive fat
+        if f_pct < 0.15: score -= 5     # Minor penalty for too low fat
+        
+        if p_pct < 0.12: score -= 15    # Penalty for low protein
+        
+        if c_pct > 0.70: score -= 10    # Penalty for extreme carb dominance
     
-    # 3. Junk Markers Penalties
-    if sugar > 15: score -= 10
-    if sodium > 600: score -= 10
+    # 2. Processing and Quality
+    if is_processed:
+        score -= 20
+        
+    if fiber > 3.5: score += 5      # Bonus for high fiber density
+    if fiber < 1.0 and carbs > 20: score -= 5 # Penalty for refined carbs
+    
+    if sugar > (calories * 0.15 / 4 if calories > 0 else 15): 
+        score -= 15 # Penalty for sugar > 15% of energy
+        
+    # 3. Junk Markers
+    if sodium > 800: score -= 10
     if sat_fat > 10: score -= 10
     
-    # 4. Energy Density Penalty (Calories per gram)
+    # 4. Energy Density Penalty
     if weight_g > 0:
         density = calories / weight_g
-        if density > 4: score -= 15  # Very calorie dense
+        if density > 4: score -= 15
     
     # 5. Goal Adaptation
     if user_goal == 'lose':
         if calories > 600: score -= 10
-        if sugar > 10: score -= 10  # Stricter on sugar
-        if density > 3: score -= 10 # Stricter on density
+        if density > 3: score -= 10
     elif user_goal == 'muscle' or user_goal == 'gain':
-        if protein > 20: score += 10 # Reward high protein
-        if calories > 800: score += 5 # Reward high energy for gaining
+        if protein > 25: score += 10 # Higher reward for muscle build protein levels
+        if calories > 800: score += 5
     
     # Clamp and Emoji
     final_score = max(0, min(100, score))

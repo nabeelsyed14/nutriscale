@@ -3,11 +3,12 @@ import datetime
 import traceback
 from flask import Blueprint, request, jsonify, current_app, Response
 from backend.models import db, User, Meal, DailyLog, UserProgress, WeeklyLog
-from backend.services.hardware import scale_service, camera_service, display_service
+from backend.services.hardware import scale_service, camera_service
 from backend.services.nutrition import (
     calculate_bmr, calculate_tdee, calculate_target_calories, 
     estimate_nutrition_from_image
 )
+from backend.services.ml_engine import ml_service
 
 api_bp = Blueprint('api', __name__)
 
@@ -79,11 +80,6 @@ def user_setup():
         
         # Set as current user
         current_user_id = user.id
-        display_service.update_display(
-            f"Welcome {user.name}!",
-            f"Goal: {user.daily_calorie_target} kcal",
-            ""
-        )
         
         return jsonify(user.to_dict())
     except Exception as e:
@@ -107,11 +103,6 @@ def switch_user(user_id):
         return jsonify({"error": "User not found"}), 404
     
     current_user_id = user_id
-    display_service.update_display(
-        f"Switched to {user.name}",
-        f"Goal: {user.daily_calorie_target} kcal",
-        ""
-    )
     return jsonify(user.to_dict())
 
 @api_bp.route('/user/update', methods=['PUT'])
@@ -298,13 +289,6 @@ def log_meal():
     
     db.session.commit()
     
-    # Update Physical Display with enhanced feedback
-    remaining = user.daily_calorie_target - log.total_calories
-    display_service.update_display(
-        f"{meal.health_emoji} Score: {meal.health_score}",
-        f"Cal: {log.total_calories}/{user.daily_calorie_target}",
-        f"Remaining: {remaining}"
-    )
 
     return jsonify(meal.to_dict())
 
@@ -477,3 +461,46 @@ def get_weekly_stats():
         "weight_history": [p.to_dict() for p in history],
         "weekly_avg_score": avg_score
     })
+
+@api_bp.route('/ml/insight', methods=['GET'])
+def get_ml_insight():
+    """
+    Experimental: Get predictive health insight using Random Forest model.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "No active user"}), 400
+    
+    today = datetime.date.today()
+    log = DailyLog.query.filter_by(user_id=user.id, date=today).first()
+    
+    # Defaults
+    totals = {
+        'total_calories': 0.0,
+        'total_protein': 0.0,
+        'total_carbs': 0.0,
+        'total_fat': 0.0,
+        'sugar': 0.0,
+        'fiber': 0.0,
+        'sodium': 0.0
+    }
+    
+    if log:
+        totals['total_calories'] = float(log.total_calories or 0)
+        totals['total_protein'] = float(log.total_protein or 0)
+        totals['total_carbs'] = float(log.total_carbs or 0)
+        totals['total_fat'] = float(log.total_fat or 0)
+        totals['sugar'] = float(getattr(log, 'total_sugar', 0.0) or 0.0)
+        totals['fiber'] = float(getattr(log, 'total_fiber', 0.0) or 0.0)
+        totals['sodium'] = float(getattr(log, 'total_sodium', 0.0) or 0.0)
+
+    # 1. Run prediction
+    predicted_score = ml_service.predict_score(totals)
+    
+    if predicted_score is None:
+        return jsonify({"message": "Model not loaded yet. Keep logging!"}), 202
+    
+    # 2. Generate proactive insight
+    insight = ml_service.generate_insight(totals, predicted_score)
+    
+    return jsonify(insight)

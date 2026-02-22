@@ -52,23 +52,6 @@ class MockCameraService:
                 f.write(b'fake image data')
             return True
 
-class MockDisplayService:
-    def update_display(self, line1, line2, line3=None):
-        """
-        Mock: Prints the display content to the console.
-        """
-        print("\n" + "="*30)
-        try:
-            print(f"| {line1.center(26)} |")
-            print(f"| {line2.center(26)} |")
-            if line3:
-                print(f"| {line3.center(26)} |")
-        except UnicodeEncodeError:
-            print(f"| {line1.encode('ascii', 'ignore').decode().center(26)} |")
-            print(f"| {line2.encode('ascii', 'ignore').decode().center(26)} |")
-            if line3:
-                print(f"| {line3.encode('ascii', 'ignore').decode().center(26)} |")
-        print("="*30 + "\n")
 
 
 # --- REAL HARDWARE SERVICES (Raspberry Pi) ---
@@ -93,17 +76,17 @@ class RealScaleService:
             
             # Initial Tare
             self.tare()
-            print(f"[HARDWARE] Scale Ready. Initial Offset: {self.offset}")
         except Exception as e:
             print(f"[HARDWARE] Scale failed: {e}")
             self.dout = None
 
     def _get_raw(self):
         if not self.dout: return None
-        # Wait for ready (max 1s)
+        # Wait for ready (max 1.0s as per v1 stable)
         start = time.time()
         while self.dout.value == 1:
-            if time.time() - start > 1.0: return None
+            if time.time() - start > 1.0: 
+                return None
         
         # Read 24 bits
         raw = 0
@@ -113,7 +96,8 @@ class RealScaleService:
             self.pd_sck.off()
         
         # 1 pulse for GAIN=128
-        self.pd_sck.on(); self.pd_sck.off()
+        self.pd_sck.on()
+        self.pd_sck.off()
         
         # 2's complement
         if raw & 0x800000: raw -= 0x1000000
@@ -121,31 +105,40 @@ class RealScaleService:
 
     def get_weight(self):
         if not self.dout: return 0.0
-        # Non-blocking lock to avoid hanging the API if a tare is in progress
         locked = self.scale_lock.acquire(blocking=False)
         if not locked: return 0.0
         
         try:
             total = 0
             count = 0
-            for _ in range(10): # 10 samples for better stability
+            raw_vals = []
+            for _ in range(5):
                 val = self._get_raw()
                 if val is not None:
+                    # Filter out 0 or -1 (disconnected/noise)
+                    if val == 0 or val == -1: continue
                     total += val
                     count += 1
-                time.sleep(0.005) # Tiny sleep between bits
+                    raw_vals.append(val)
+                time.sleep(0.01)
             
             if count == 0: return 0.0
             
             avg_raw = total / count
+            
+            # Debugging: Only print if there's significant movement or randomly
+            if abs(avg_raw - self.offset) > 1000 and random.random() < 0.2:
+                print(f"[HARDWARE] Scale Activity - Delta: {avg_raw - self.offset:.0f}, Raw: {avg_raw:.0f}")
+
             weight = (avg_raw - self.offset) / self.reference_unit
             
-            # Noise filter: if weight is very small, force to 0
-            if abs(weight) < 0.5:
-                return 0.0
+            # Ignore noise below 1.0g
+            if abs(weight) < 1.0: return 0.0
             
             return round(weight, 1)
-        except: return 0.0
+        except Exception as e: 
+            print(f"[HARDWARE] Scale error: {e}")
+            return 0.0
         finally:
             self.scale_lock.release()
 
@@ -163,7 +156,9 @@ class RealScaleService:
                 time.sleep(0.01)
             if count > 0:
                 self.offset = total / count
+                print(f"[HARDWARE] Scale Ready. Initial Offset: {self.offset:.2f}")
                 return True
+            print("[HARDWARE] Tare Failed: No stable data.")
             return False
 
 import threading
@@ -295,31 +290,6 @@ class RealCameraService:
                 try: process.wait(timeout=0.5)
                 except: process.kill()
 
-class RealDisplayService:
-    def __init__(self):
-        self.lcd = None
-        try:
-            from RPLCD.i2c import CharLCD
-            # Configurable via .env
-            addr = int(os.getenv("LCD_I2C_ADDRESS", "0x27"), 16)
-            expander = os.getenv("LCD_I2C_EXPANDER", "PCF8574")
-            
-            print(f"[HARDWARE] Initializing LCD at {hex(addr)} with {expander}...")
-            self.lcd = CharLCD(i2c_expander=expander, address=addr, port=1, cols=16, rows=2)
-            self.lcd.clear()
-            self.lcd.write_string("NutriScale v2.1")
-            print("[HARDWARE] Real Display Initialized.")
-        except Exception as e:
-            print(f"[HARDWARE] Real Display failed: {e}. Using Mock.")
-
-    def update_display(self, line1, line2, line3=""):
-        if not self.lcd: return
-        try:
-            self.lcd.clear()
-            self.lcd.write_string(line1[:16])
-            self.lcd.crlf()
-            self.lcd.write_string(line2[:16])
-        except: pass
 
 # --- SMART FACTORY ---
 
@@ -328,11 +298,11 @@ def get_services():
     
     if not use_real:
         print(">>> STARTING IN MOCK HARDWARE MODE <<<")
-        return MockScaleService(), MockCameraService(), MockDisplayService()
+        return MockScaleService(), MockCameraService()
 
     print(">>> STARTING IN SMART HARDWARE MODE (Real where possible) <<<")
     
-    # 1. Scale (HX711 is very prone to hanging if not connected)
+    # 1. Scale
     try:
         scale = RealScaleService()
         if scale.dout is None: raise Exception("HX711 not found")
@@ -341,19 +311,11 @@ def get_services():
         scale = MockScaleService()
         print("[HARDWARE] Scale: MOCK (Hardware not detected)")
 
-    # 2. Camera (Confirmed working by user test)
+    # 2. Camera
     camera = RealCameraService()
     print("[HARDWARE] Camera: REAL")
 
-    # 3. Display
-    display = RealDisplayService()
-    if display.lcd is None:
-        display = MockDisplayService()
-        print("[HARDWARE] Display: MOCK")
-    else:
-        print("[HARDWARE] Display: REAL")
-
-    return scale, camera, display
+    return scale, camera
 
 # Export singleton instances
-scale_service, camera_service, display_service = get_services()
+scale_service, camera_service = get_services()

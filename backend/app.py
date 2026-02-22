@@ -58,4 +58,6 @@ def create_app(test_config=None):
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=True)
+    # Disable reloader on Pi to prevent "GPIO busy" errors from double-initialization
+    use_reloader = os.getenv("USE_REAL_HARDWARE", "false").lower() != "true"
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=use_reloader)
