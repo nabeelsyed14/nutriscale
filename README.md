@@ -44,14 +44,26 @@ The project includes a comprehensive **Academic Research Suite** ([ml/nutriscale
 
 ## 📦 Installation & Setup
 
-1. **Clone the Repo:**
-   ```bash
-   git clone [https://github.com/nabeelsyed14/nutriscale.git](https://github.com/nabeelsyed14/nutriscale.git)
-   cd nutriscale
-2. **Run Environment Setup:**
-   ```bash
-   chmod +x setup_pi.sh run_pi.sh
-   ./setup_pi.sh
-3. **Launch:**
-   ```bash
-   ./run_pi.sh
+
+### 1. System Requirements
+*   **Operating System:** Raspberry Pi OS (64-bit recommended)
+*   **Hardware:** Raspberry Pi 5, HX711 Load Cell, Pi Camera Module 3
+*   **Local AI Vision:** Ollama (for local LLaVA processing)
+
+### 2. Core Dependencies
+      Install **Ollama** to handle local food identification:
+      ```bash
+      # Install Ollama
+      curl -fsSL [https://ollama.com/install.sh](https://ollama.com/install.sh) | sh
+      
+      # Pull the Vision Model (LLaVA)
+      ollama pull llava
+
+### 3. Clone the Repo:
+      git clone [https://github.com/nabeelsyed14/nutriscale.git](https://github.com/nabeelsyed14/nutriscale.git)
+      cd nutriscale
+### 4. Run Environment Setup:
+      chmod +x setup_pi.sh run_pi.sh
+      ./setup_pi.sh
+### 5. Launch:
+      ./run_pi.sh
