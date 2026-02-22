@@ -67,5 +67,5 @@ The project includes a comprehensive **Academic Research Suite** ([ml/nutriscale
       ./setup_pi.sh
 ### 5. Launch:
       ./run_pi.sh (PI)
-      **or**
+             or
       ./run_pc.bat (PC)
