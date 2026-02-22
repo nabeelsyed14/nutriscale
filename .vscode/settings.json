@@ -1,6 +1,0 @@
-{
-    "python.defaultInterpreterPath": "C:\\Users\\nabee\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\\python.exe",
-    "python.analysis.extraPaths": [
-        "./backend"
-    ]
-}
