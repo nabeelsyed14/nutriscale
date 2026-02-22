@@ -1,29 +1,28 @@
-# Secrets
-.env
-
-# Python junk
+# Python artifacts
 __pycache__/
 *.py[cod]
 *$py.class
-.venv
 venv/
-ENV/
+.venv/
 
-# Large ML data/models (Better to keep local or use LFS)
-ml/health_model.joblib
-ml/user_logs.csv
+# Environment
+.env
 
-# Local meal images (Keep logo)
-frontend/static/images/*.jpg
-!frontend/static/images/logo.png
+# Databases
+backend/*.sqlite
+backend/data/*.sqlite
+*.db
+backend/data/*.bak
+
+# Uploads and Photos
+backend/uploads/
+*.jpg
+*.jpeg
+*.png
+!frontend/assets/  # Keep frontend UI assets if they exist
+!*.joblib           # Keep the ML model for deployment
 
 # IDEs
-.vscode/
 .idea/
-
-# OS junk
+.vscode/
 .DS_Store
-Thumbs.db
-
-# Database
-backend/data/*.db
