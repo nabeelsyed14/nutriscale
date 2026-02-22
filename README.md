@@ -52,7 +52,7 @@ The project includes a comprehensive **Academic Research Suite** ([ml/nutriscale
 
 ### 2. Core Dependencies
       Install **Ollama** to handle local food identification:
-      ```bash
+      
       # Install Ollama
       curl -fsSL [https://ollama.com/install.sh](https://ollama.com/install.sh) | sh
       
