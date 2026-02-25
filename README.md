@@ -46,7 +46,7 @@ This project is designed to be flexible and can be run in two distinct modes:
 ---
 
 ## 🔬 Research Suite
-The project includes a comprehensive **Academic Research Suite** (`ml/nutriscale_ml_suite.ipynb`) documenting:
+The project includes a comprehensive **Academic Research Suite** (`ml/nutriscale_ml.ipynb`) documenting:
 *   Feature Importance & Metabolic Narratives.
 *   Residual & Error Distribution Analysis.
 *   Counterfactual "What-If" Simulations for dietary interventions.
@@ -58,7 +58,7 @@ The project includes a comprehensive **Academic Research Suite** (`ml/nutriscale
 ### 1. Basic Software Setup (All Modes)
 Ensure **Ollama** is installed for local food identification:
 ```bash
-# Install Ollama (Linux/macOS)
+# Install Ollama (Linux/macOS/windows)
 curl -fsSL https://ollama.com/install.sh | sh
 
 # Pull the Vision Model (LLaVA)
