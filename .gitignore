@@ -19,8 +19,8 @@ backend/uploads/
 *.jpg
 *.jpeg
 *.png
-!frontend/assets/  # Keep frontend UI assets if they exist
-!*.joblib           # Keep the ML model for deployment
+!frontend/assets/  
+!*.joblib           
 
 # IDEs
 .idea/
