@@ -1,4 +1,4 @@
-#!/bin/bash
+    #!/bin/bash
 
 # NutriScale Pi Setup Script
 # Run this on your Raspberry Pi 5
@@ -32,17 +32,18 @@ if [ -d ".venv" ] && [ -f ".venv/bin/activate" ]; then
 else
     echo "[!] Virtual environment missing or broken. Recreating..."
     rm -rf .venv
-    python3 -m venv .venv
+    /usr/bin/python3 -m venv .venv
     echo "[+] Virtual environment created."
 fi
 
 # 4. Activate and Install Requirements
 echo "[+] Installing Python dependencies..."
-if source .venv/bin/activate; then
-    pip install --upgrade pip setuptools wheel
-    pip install -r requirements.txt
+if [ -f ".venv/bin/python" ]; then
+    . .venv/bin/activate
+    ./.venv/bin/python -m pip install --upgrade pip setuptools wheel
+    ./.venv/bin/python -m pip install --force-reinstall -r requirements.txt
 else
-    echo "[-] FAILED to activate virtual environment. Is python3-venv installed?"
+    echo "[-] FAILED: Virtual environment binary not found."
     exit 1
 fi
 

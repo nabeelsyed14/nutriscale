@@ -15,4 +15,4 @@ fi
 
 # Run Flask on 0.0.0.0 (accessible on LAN)
 echo "[+] Starting NutriScale Server..."
-python backend/app.py
+./.venv/bin/python backend/app.py

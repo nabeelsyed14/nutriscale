@@ -109,30 +109,25 @@ class RealScaleService:
         if not locked: return 0.0
         
         try:
-            total = 0
-            count = 0
-            raw_vals = []
-            for _ in range(5):
+            samples = []
+            # High-sample count (15) for high accuracy
+            for _ in range(15):
                 val = self._get_raw()
-                if val is not None:
-                    # Filter out 0 or -1 (disconnected/noise)
-                    if val == 0 or val == -1: continue
-                    total += val
-                    count += 1
-                    raw_vals.append(val)
-                time.sleep(0.01)
+                if val is not None and val != 0 and val != -1:
+                    samples.append(val)
+                time.sleep(0.001) 
             
-            if count == 0: return 0.0
+            if len(samples) < 5: return 0.0
             
-            avg_raw = total / count
+            # STABILITY WIN: Sort and trim top/bottom outliers (Median-Hybrid)
+            samples.sort()
+            trimmed = samples[3:-3] # Remove 3 lowest and 3 highest
+            if not trimmed: trimmed = samples
             
-            # Debugging: Only print if there's significant movement or randomly
-            if abs(avg_raw - self.offset) > 1000 and random.random() < 0.2:
-                print(f"[HARDWARE] Scale Activity - Delta: {avg_raw - self.offset:.0f}, Raw: {avg_raw:.0f}")
-
+            avg_raw = sum(trimmed) / len(trimmed)
             weight = (avg_raw - self.offset) / self.reference_unit
             
-            # Ignore noise below 1.0g
+            # Noise Floor: Ignore jitter under 1.0g
             if abs(weight) < 1.0: return 0.0
             
             return round(weight, 1)
@@ -146,16 +141,16 @@ class RealScaleService:
         """Zero out the scale (with locking)."""
         with self.scale_lock:
             print("[HARDWARE] Taring scale...")
-            total = 0
-            count = 0
-            for _ in range(20):
+            samples = []
+            for _ in range(30):
                 val = self._get_raw()
                 if val is not None:
-                    total += val
-                    count += 1
-                time.sleep(0.01)
-            if count > 0:
-                self.offset = total / count
+                    samples.append(val)
+                time.sleep(0.001)
+            if len(samples) > 10:
+                samples.sort()
+                trimmed = samples[5:-5]
+                self.offset = sum(trimmed) / len(trimmed)
                 print(f"[HARDWARE] Scale Ready. Initial Offset: {self.offset:.2f}")
                 return True
             print("[HARDWARE] Tare Failed: No stable data.")
@@ -206,7 +201,7 @@ class RealCameraService:
             return False
 
         with self.camera_lock:
-            cmd = [cmd_base, "-o", save_path, "-t", "1000", "--width", "1920", "--height", "1440", "--nopreview"]
+            cmd = [cmd_base, "-o", save_path, "-t", "500", "--width", "1920", "--height", "1440", "--nopreview"]
             try:
                 print(f"[HARDWARE] Attempting full cap (Fallback): {' '.join(cmd)}")
                 result = subprocess.run(cmd, check=True, capture_output=True, text=True)
@@ -224,13 +219,17 @@ class RealCameraService:
             print("[HARDWARE] ERROR: No video binary found (rpicam-vid or libcamera-vid)")
             return
 
+        # Pi 5 Tuned MJPEG Stream
         cmd = [
             cmd_base, "-t", "0", 
             "--codec", "mjpeg", 
-            "--inline",
+            "--inline", # Critical for MJPEG frame boundaries
             "--width", "640", "--height", "480", 
-            "--framerate", "20",
-            "--nopreview", "-o", "-"
+            "--framerate", "10", # Slower framerate = less network/CPU jitter
+            "--nopreview", 
+            "--denoise", "cdn_off", 
+            "--flush", # Ensure frames aren't buffered in the pipe
+            "-o", "-"
         ]
         
         print(f"[HARDWARE] Starting Video Stream: {' '.join(cmd)}")
@@ -269,9 +268,7 @@ class RealCameraService:
                         # Store as the latest snap-able frame
                         self.latest_frame = jpg
                         
-                        if time.time() - last_frame_time > 1.0:
-                            print(f"[HARDWARE] Streaming: {len(jpg)} bytes frame produced")
-                            last_frame_time = time.time()
+                        last_frame_time = time.time()
 
                         yield (b'--frame\r\n'
                                b'Content-Type: image/jpeg\r\n\r\n' + jpg + b'\r\n')

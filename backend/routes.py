@@ -170,9 +170,6 @@ def analyze_meal():
     
     # Check if client uploaded an image
     image_source = request.form.get('image_source', 'pi')  # 'pi' or 'client'
-    print(f"[ROUTES] Image source: {image_source}", flush=True)
-    print(f"[ROUTES] Files in request: {list(request.files.keys())}", flush=True)
-    import sys; sys.stdout.flush()  # Force flush
     
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     image_filename = f"meal_{timestamp}.jpg"
@@ -209,7 +206,6 @@ def analyze_meal():
             print(f"[DEBUG] Weight from form: {weight}g", flush=True)
         else:
             weight = scale_service.get_weight()
-            print(f"[DEBUG] Weight from scale: {weight}g", flush=True)
 
         if weight <= 0:
             return jsonify({"error": "No food detected on scale"}), 400
@@ -345,8 +341,7 @@ def get_daily_stats():
         'total_fiber': 0.0,
         'total_sodium': 0.0,
         'meal_count': 0,
-        'user_name': user.name,
-        'diagnostics_key': 'refactored_v1'
+        'user_name': user.name
     }
 
     if log:
