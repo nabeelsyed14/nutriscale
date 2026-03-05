@@ -262,6 +262,7 @@ async function loadDashboard() {
             fiber: data.total_fiber,
             sodium: data.total_sodium
         };
+        console.log("[DEBUG] Dashboard Micros Received:", micros);
 
         const updateMicro = (id, val, unit) => {
             const el = document.getElementById(id);
@@ -303,13 +304,15 @@ async function loadMLInsights() {
         }
 
         const data = await res.json();
+        console.log("[ML] Received Insight Data:", data);
 
-        if (data.predicted_score) {
+        if (data.predicted_score !== undefined && data.predicted_score !== null) {
             card.classList.remove('hidden');
-            textEl.innerHTML = `Predicted Daily Health Score: <span style="font-size: 1.2rem; color: var(--primary);">${data.predicted_score}</span> / 10`;
+            textEl.innerHTML = `Predicted Daily Health Score: <span style="font-size: 1.2rem; color: var(--primary);">${data.predicted_score}</span> / 100`;
 
             listEl.innerHTML = (data.suggestions || []).map(s => `<li>${s}</li>`).join('');
         } else {
+            console.warn("[ML] No predicted score in response data");
             card.classList.add('hidden');
         }
     } catch (e) {
@@ -742,6 +745,7 @@ document.getElementById('btn-save-meal').addEventListener('click', async () => {
 
     if (res.ok) {
         stopWeightPolling();
+        await loadDashboard(); // Force immediate refresh
         showMealReview(currentMealAnalysis);
         // Reset UI
         document.getElementById('analysis-result').classList.add('hidden');

@@ -8,6 +8,6 @@ Pillow>=10.3.0
 gpiozero==2.0
 rpi-lgpio
 joblib==1.3.2
-pandas==2.1.3
-numpy==1.26.2
-scikit-learn==1.3.2
+pandas>=2.2.3
+numpy>=2.1.0
+scikit-learn>=1.5.0

@@ -120,7 +120,7 @@ def generate_user_data(num_users=20, days=28):
 
 if __name__ == "__main__":
     print("Generating synthesized data...")
-    df = generate_user_data(num_users=100, days=30)
+    df = generate_user_data(num_users=150, days=60)
     output_path = os.path.join('ml', 'user_logs.csv')
     df.to_csv(output_path, index=False)
     print(f"Succefully generated {len(df)} logs for {df['user_id'].nunique()} users.")

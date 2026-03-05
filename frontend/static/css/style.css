@@ -186,8 +186,13 @@ body {
 }
 
 @keyframes aiGlowPulse {
-    0% { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 rgba(0, 230, 118, 0); }
-    100% { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 230, 118, 0.15); }
+    0% {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 rgba(0, 230, 118, 0);
+    }
+
+    100% {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 230, 118, 0.15);
+    }
 }
 
 #ml-suggestions-list li {

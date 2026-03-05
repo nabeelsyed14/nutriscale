@@ -312,6 +312,9 @@ def delete_meal(meal_id):
             log.total_protein = max(0, log.total_protein - meal.protein_g)
             log.total_carbs = max(0, log.total_carbs - meal.carbs_g)
             log.total_fat = max(0, log.total_fat - meal.fat_g)
+            log.total_sugar = max(0, log.total_sugar - (meal.sugar_g or 0))
+            log.total_fiber = max(0, log.total_fiber - (meal.fiber_g or 0))
+            log.total_sodium = max(0, log.total_sodium - (meal.sodium_mg or 0))
             log.meal_count = max(0, log.meal_count - 1)
             
         db.session.delete(meal)
@@ -488,6 +491,8 @@ def get_ml_insight():
         totals['sugar'] = float(getattr(log, 'total_sugar', 0.0) or 0.0)
         totals['fiber'] = float(getattr(log, 'total_fiber', 0.0) or 0.0)
         totals['sodium'] = float(getattr(log, 'total_sodium', 0.0) or 0.0)
+
+    print(f"[ROUTES] ML Insight requested for totals: {totals}")
 
     # 1. Run prediction
     predicted_score = ml_service.predict_score(totals)

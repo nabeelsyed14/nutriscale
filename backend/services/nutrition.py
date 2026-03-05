@@ -40,6 +40,9 @@ except Exception as e:
     NUTRITION_DB = {}
 
 
+# Stop words that should not trigger a match on their own
+STOP_WORDS = {"soup", "mix", "dry", "cooked", "raw", "with", "and", "style", "canned", "ready-to-serve", "condensed"}
+
 def get_grounding_data(query):
     """Fuzzy lookup in local database for grounding with word-level checking."""
     if not query: return None
@@ -47,28 +50,39 @@ def get_grounding_data(query):
     q_words = set(q_norm.split())
     
     # Priority 1: Exact Key Match
-    if q_norm in NUTRITION_DB:
+    if q_norm.replace(" ", "_") in NUTRITION_DB:
         print(f"[NUTRITION] Perfect Key Match: {q_norm}")
-        return NUTRITION_DB[q_norm]
+        return NUTRITION_DB[q_norm.replace(" ", "_")]
 
-    # Priority 2: Key contained as a whole word in query (e.g. "Apple" in "Red Apple")
+    matches = []
+
     for key, data in NUTRITION_DB.items():
         k_norm = key.replace("_", " ")
         k_words = k_norm.split()
         
-        # If any word in the key matches any word in the query perfectly
-        if any(kw in q_words for kw in k_words):
-             print(f"[NUTRITION] Word-level Match (key): {key} for query: {query}")
-             return data
+        # Calculate overlap
+        common_words = q_words.intersection(set(k_words))
+        if not common_words:
+            # Check aliases
+            for alias in data.get("aliases", []):
+                a_words = alias.lower().split()
+                common_words = q_words.intersection(set(a_words))
+                if common_words: break
+        
+        if common_words:
+            # RULE: At least one matching word must NOT be a stop word
+            if any(w not in STOP_WORDS for w in common_words):
+                # Score based on how many words matched vs total words in key
+                # This favors more specific matches over generic ones
+                score = len(common_words) / float(len(k_words))
+                matches.append((score, data))
+
+    if matches:
+        # Return the highest scoring match
+        matches.sort(key=lambda x: x[0], reverse=True)
+        print(f"[NUTRITION] Fuzzy Match Found (Score: {matches[0][0]:.2f}) for: {query}")
+        return matches[0][1]
              
-        # Priority 3: Alias contained as a whole word
-        for alias in data.get("aliases", []):
-            a_norm = alias.lower()
-            a_words = a_norm.split()
-            if any(aw in q_words for aw in a_words):
-                print(f"[NUTRITION] Word-level Match (alias): {alias} for query: {query}")
-                return data
-                
     return None
 
 

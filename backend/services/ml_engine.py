@@ -63,10 +63,19 @@ class MLEngine:
             # Reorder columns to match model training and avoid feature name warnings
             input_df = pd.DataFrame(input_df[features], columns=features)
             
+            # DIAGNOSTIC LOGGING
+            print(f"[ML ENGINE] Features for prediction: {input_df.iloc[0].to_dict()}")
+            
             prediction = self.model.predict(input_df)[0]
-            return round(float(prediction), 2)
-        except Exception as e:
+            # Scale 0-10 prediction to 0-100 to match main dashboard
+            scaled_prediction = min(100, max(0, round(float(prediction) * 10, 1)))
+            print(f"[ML ENGINE] Raw Prediction: {prediction} -> Scaled: {scaled_prediction}")
+            
+            return scaled_prediction
+        except Exception as e: 
             print(f"[ML ENGINE] Prediction Error: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     def generate_insight(self, totals, predicted_score):
@@ -76,15 +85,18 @@ class MLEngine:
         insights = []
         
         # 1. Prediction Message
-        base_msg = f"AI Prediction: You are on track for a {predicted_score}/10 Health Score today."
+        base_msg = f"AI Health Forecast: You are trending towards a {predicted_score}/100 Health Score today."
         
-        # 2. Logic-based Proactive Suggestions
+        # 2. Logic-based Proactive Suggestions (Detailed & Health-Centric)
     
         # Extract total energy for percentage calculations
-        # Using Atwater factors: p=4, c=4, f=9
         p = totals.get('total_protein', 0)
         c = totals.get('total_carbs', 0)
         f = totals.get('total_fat', 0)
+        sugar = totals.get('sugar', 0)
+        fiber = totals.get('fiber', 0)
+        sodium = totals.get('sodium', 0)
+        
         total_ener = (p * 4) + (c * 4) + (f * 9)
         
         if total_ener > 0:
@@ -92,36 +104,36 @@ class MLEngine:
             f_pct = (f * 9) / total_ener
             c_pct = (c * 4) / total_ener
             
-            # High Fat
+            # High Fat (>35% AMDR upper limit)
             if f_pct > 0.35:
-                insights.append("Your fat intake is above 35% of total energy—try choosing leaner protein sources.")
+                insights.append("Your fat intake has crossed 35% of total energy. While healthy fats are vital, high fat density can lead to excessive calorie intake. Try balancing your next meal with fiber-rich complex carbs.")
                 
-            # Low Protein
+            # Low Protein (<15% for active recovery)
             if p_pct < 0.15:
-                insights.append("Protein intake is below 15%—this may affect muscle recovery and satiety.")
+                insights.append("Protein is currently below 15% of your energy mix. Protein is essential for muscle tissue repair and maintaining satiety. Consider adding a lean protein source like lentils or Greek yogurt to your next log.")
                 
-            # High Carbs
+            # High Carbs (>70% AMDR upper limit)
             if c_pct > 0.70:
-                insights.append("Carbs are making up over 70% of your day—consider balancing with more protein.")
+                insights.append("Carbohydrates are dominating over 70% of your current profile. To avoid energy spikes and 'crashes,' try pairing your carbs with more protein or healthy fats in your upcoming meals.")
 
-        # High Sugar (Legacy but still relevant)
-        if totals.get('sugar', 0) > 40:
-            insights.append("Your sugar intake is high. This is a primary driver dragging your predicted score down.")
+        # High Sugar (>50g WHO limit)
+        if sugar > 50:
+            insights.append("Sugar intake has exceeded the 50g daily threshold. High sugar consumption is a primary driver of insulin resistance and systemic inflammation. Swapping sugary snacks for whole fruits can help stabilize your blood sugar.")
             
-        # Low Fiber
-        if totals.get('fiber', 0) < 15:
-            insights.append("Increasing fiber (e.g., adding vegetables) would boost your predicted score significantly.")
+        # Low Fiber (<25g goal)
+        if fiber < 25:
+            insights.append("Fiber is currently below the 25g target. Adequate fiber is crucial for gut microbiome health and efficient digestion. Adding more leafy greens or whole grains would significantly improve your long-term health outlook.")
             
-        # High Sodium
-        if totals.get('sodium', 0) > 2500:
-            insights.append("Sodium levels are elevated. Reducing salt in your next meal will help maintain your trend.")
+        # High Sodium (>2300mg FDA limit)
+        if sodium > 2300:
+            insights.append("Sodium levels have surpassed 2,300mg. Excess sodium leads to water retention and puts added strain on your cardiovascular system. Focus on fresh, non-processed ingredients for your next few meals to reset.")
 
         # Good job message
         if not insights:
-            if predicted_score > 8.0:
-                insights.append("Excellent balance! Your current nutrient mix is optimal according to the predictive model.")
+            if predicted_score > 80:
+                insights.append("Excellent metabolic balance! Your current nutrient distribution is optimal for sustained energy and long-term vitality according to our predictive model.")
             else:
-                insights.append("You are maintaining a steady baseline. Aim for a balanced macro-mix and more fiber.")
+                insights.append("You are maintaining a steady nutritional baseline. For a 'boost' in vitality, aim to increase your fiber intake and keep added sugars minimal.")
 
         return {
             "predicted_score": predicted_score,

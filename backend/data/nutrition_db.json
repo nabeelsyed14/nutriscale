@@ -84021,7 +84021,7 @@
         "upf": false
     },
     "beef_raw_select_trimmed_to_0\"_fat_separable_lean_and_fat_outside_skirt_boneless_plate_steak": {
-          "cals": 222.0,
+        "cals": 222.0,
         "p": 18.43,
         "c": 0.36,
         "f": 16.0,
@@ -97879,5 +97879,36 @@
         "sf": 1.1,
         "sug": 0.0,
         "upf": false
+    },
+    "chicken_caesar_salad": {
+        "cals": 185,
+        "p": 15.0,
+        "c": 8.0,
+        "f": 11.0,
+        "fib": 2.5,
+        "na": 450.0,
+        "sf": 3.0,
+        "sug": 1.5,
+        "upf": false,
+        "aliases": [
+            "caesar salad",
+            "chicken salad"
+        ]
+    },
+    "beef_burger": {
+        "cals": 260,
+        "p": 13.0,
+        "c": 30.0,
+        "f": 11.0,
+        "fib": 1.5,
+        "na": 520.0,
+        "sf": 4.5,
+        "sug": 5.0,
+        "upf": true,
+        "aliases": [
+            "burger",
+            "hamburger",
+            "cheeseburger"
+        ]
     }
 }
