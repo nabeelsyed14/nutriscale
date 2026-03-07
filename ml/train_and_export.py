@@ -4,7 +4,7 @@ import joblib
 import os
 
 def train_and_export():
-    # 1. Load the synthetic 3,000-log dataset
+    # 1. Load the synthetic 9,000-log dataset
     csv_path = os.path.join('ml', 'user_logs.csv')
     if not os.path.exists(csv_path):
         print(f"Error: {csv_path} not found. Run ml/data_generator.py first.")
@@ -46,6 +46,11 @@ def train_and_export():
     
     joblib.dump(model, export_path)
     print(f"Successfully exported model to: {export_path}")
+
+    # 5. Export the cleaned dataset with all engineered features
+    cleaned_csv_path = os.path.join('ml', 'cleaned_user_logs.csv')
+    df.to_csv(cleaned_csv_path, index=False)
+    print(f"Successfully exported cleaned dataset to: {cleaned_csv_path}")
 
 if __name__ == "__main__":
     train_and_export()
